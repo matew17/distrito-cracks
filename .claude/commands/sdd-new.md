@@ -11,26 +11,42 @@ problem — do not continue to the next.
 
 1. Read `.specify/memory/constitution.md` and `docs/business-rules.md`.
 
-2. Invoke `/speckit.specify` with the feature description, enriched with the
+1b. Determine whether the feature introduces new business rules.
+
+A business rule is a domain invariant that could be violated and must be
+enforced somewhere. "Returns 200 on success" is not a rule. "No two active
+bookings may overlap" is.
+
+If the feature needs rules not yet in docs/business-rules.md:
+
+- Propose them with the next free BR-xx ids, stating where each is enforced
+- Present them to the user and STOP
+- Add them to docs/business-rules.md only after approval
+- If a proposed rule replaces an existing one, mark the old one deprecated.
+  Never renumber.
+
+If no new rules are needed, say so and continue.
+
+1. Invoke `/speckit.specify` with the feature description, enriched with the
    BR-xx rules that apply. Name every applicable rule ID explicitly.
 
-3. Invoke `/speckit.clarify`. Surface its questions to the user and STOP.
+2. Invoke `/speckit.clarify`. Surface its questions to the user and STOP.
    Do not answer them yourself. Ambiguity resolved by guessing is the failure
    mode this whole workflow exists to prevent.
    Resume only after the user answers.
 
-4. Invoke `/speckit.plan` with: NestJS, Prisma, PostgreSQL, module structure
+3. Invoke `/speckit.plan` with: NestJS, Prisma, PostgreSQL, module structure
    per the constitution. Any concurrency invariant must be planned as a
    database constraint.
 
-5. Invoke `/speckit.tasks`.
+4. Invoke `/speckit.tasks`.
 
-6. Invoke `/speckit.analyze`. If it reports gaps or inconsistencies, report
+5. Invoke `/speckit.analyze`. If it reports gaps or inconsistencies, report
    them and STOP.
 
-7. Write the spec id to `.sdd/current-spec`.
+6. Write the spec id to `.sdd/current-spec`.
 
-8. Print a summary:
+7. Print a summary:
    - spec path
    - task count
    - BR-xx rules covered, and any rule in scope with no task
