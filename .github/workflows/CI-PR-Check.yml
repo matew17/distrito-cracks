@@ -9,6 +9,10 @@ jobs:
   validate-pr:
     name: Lint, Test, and Build
     runs-on: ubuntu-latest
+    
+    # Fake url generation so Prisma pass
+    env:
+      DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy_db?schema=public"
 
     steps:
       - name: Checkout Code
@@ -25,7 +29,6 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
-        # Required so NestJS can find the generated types during build/test
 
       - name: Run Linter
         run: npm run lint
