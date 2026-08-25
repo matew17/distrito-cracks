@@ -1,6 +1,37 @@
 {
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git push -u origin:*)",
+      "Bash(gh pr create:*)",
+      "Bash(jq:*)",
+      "Bash(grep:*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Task",
+      "SlashCommand:/speckit.specify",
+      "SlashCommand:/speckit.clarify",
+      "SlashCommand:/speckit.plan",
+      "SlashCommand:/speckit.tasks",
+      "SlashCommand:/speckit.analyze"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./prisma/migrations/**)",
+      "Bash(gh pr merge:*)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
