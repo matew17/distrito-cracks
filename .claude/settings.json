@@ -33,7 +33,7 @@
       "Read(./.env.development)",
       "Read(./.env.production)",
       "Read(./.env.test)",
-      "Edit(./prisma/migrations/**)",
+      "Edit(./prisma/migrations/20260825163757_init/**)",
       "Bash(gh pr merge:*)"
     ]
   },
