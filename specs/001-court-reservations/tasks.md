@@ -61,7 +61,7 @@ depends on all of it.
 - [x] T011 [P] Add unit spec `src/common/time/venue-time.spec.ts` covering weekday/minute extraction, midnight and `closesAt = 1440` boundaries, and that results are independent of the process `TZ`.
 - [x] T012 [P] Create `src/common/auth/current-customer.guard.ts` and `current-customer.decorator.ts`: resolve the `X-Customer-Id` header to a `Customer`, 401 on missing/unknown, attach to the request. Include the comment from research.md R5 stating this is a spoofable placeholder that must not ship publicly. Never read the customer id from a body or route param — BR-08 depends on it.
 - [x] T013 Create `src/courts/` — `courts.module.ts` (no controller; court management is out of scope), `courts.repository.ts` (Prisma access: court by id with its operating hours), `courts.service.ts` (bookability: `isActive`/`underMaintenance`, and the weekday window lookup). Export the service.
-- [ ] T014 Create `src/reservations/reservations.module.ts` importing `PrismaModule` and `CourtsModule`, and register both `CourtsModule` and `ReservationsModule` in `src/app.module.ts`.
+- [x] T014 Create `src/reservations/reservations.module.ts` importing `PrismaModule` and `CourtsModule`, and register both `CourtsModule` and `ReservationsModule` in `src/app.module.ts`.
 - [x] T015 [P] Add an e2e harness in `test/` providing per-test truncation of `Reservation`/`CourtOperatingHour`/`Court`/`Customer` and helpers to seed a bookable court (open 08:00–22:00 Mon–Sat, Sunday deliberately unconfigured) plus two customers, per quickstart.md.
 
 **Checkpoint**: Schema, constraints, error mapping, identity and modules exist.
