@@ -11,6 +11,9 @@ Stable IDs. Never renumber. Deprecate instead.
 | BR-05 | Max 3 active bookings per user                                | Service + integration test       |
 | BR-06 | Cannot book a slot in the past                                | DTO + unit test                  |
 | BR-07 | A field under maintenance accepts no bookings                 | Service + unit test              |
+| BR-08 | Only the user who owns a booking may cancel it                | Service + integration test       |
+| BR-09 | A booking may only be cancelled from an active status         | Service + unit test              |
+| BR-10 | A booking whose start time has passed cannot be cancelled     | Service + unit test              |
 
 ## Open questions
 

@@ -269,7 +269,7 @@ todos los modos; lo demás se calibra.
   "limits": {
     "maxFilesPerTask": 10,
     "maxReviewRetries": 3,
-    "maxTasksPerRun": 5,
+    "maxTasksPerRun": 10,
     "stopOnFirstFailure": true
   },
   "gates": {
