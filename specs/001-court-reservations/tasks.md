@@ -55,14 +55,14 @@ depends on all of it.
 
 ### Cross-cutting infrastructure
 
-- [ ] T008 [P] Create the domain exception hierarchy in `src/common/domain/domain.exception.ts`: a base carrying `code`, `rule` and HTTP status, plus one subclass per row of the error table in contracts/reservations-api.md.
+- [x] T008 [P] Create the domain exception hierarchy in `src/common/domain/domain.exception.ts`: a base carrying `code`, `rule` and HTTP status, plus one subclass per row of the error table in contracts/reservations-api.md.
 - [ ] T009 Create `src/common/filters/domain-exception.filter.ts` mapping domain exceptions to the documented status + `{ statusCode, code, rule, message }` envelope, with a catch-all that logs the real error server-side and returns a generic 500. Register it globally in `src/main.ts`. Never emit Prisma text (§IV).
-- [ ] T010 [P] Create `src/common/time/venue-time.ts` exposing venue-local weekday (`0`=Sunday) and minutes-from-midnight for an instant, using `Intl.DateTimeFormat` with the configured zone — no new dependency (research.md R4).
-- [ ] T011 [P] Add unit spec `src/common/time/venue-time.spec.ts` covering weekday/minute extraction, midnight and `closesAt = 1440` boundaries, and that results are independent of the process `TZ`.
+- [x] T010 [P] Create `src/common/time/venue-time.ts` exposing venue-local weekday (`0`=Sunday) and minutes-from-midnight for an instant, using `Intl.DateTimeFormat` with the configured zone — no new dependency (research.md R4).
+- [x] T011 [P] Add unit spec `src/common/time/venue-time.spec.ts` covering weekday/minute extraction, midnight and `closesAt = 1440` boundaries, and that results are independent of the process `TZ`.
 - [ ] T012 [P] Create `src/common/auth/current-customer.guard.ts` and `current-customer.decorator.ts`: resolve the `X-Customer-Id` header to a `Customer`, 401 on missing/unknown, attach to the request. Include the comment from research.md R5 stating this is a spoofable placeholder that must not ship publicly. Never read the customer id from a body or route param — BR-08 depends on it.
-- [ ] T013 Create `src/courts/` — `courts.module.ts` (no controller; court management is out of scope), `courts.repository.ts` (Prisma access: court by id with its operating hours), `courts.service.ts` (bookability: `isActive`/`underMaintenance`, and the weekday window lookup). Export the service.
+- [x] T013 Create `src/courts/` — `courts.module.ts` (no controller; court management is out of scope), `courts.repository.ts` (Prisma access: court by id with its operating hours), `courts.service.ts` (bookability: `isActive`/`underMaintenance`, and the weekday window lookup). Export the service.
 - [ ] T014 Create `src/reservations/reservations.module.ts` importing `PrismaModule` and `CourtsModule`, and register both `CourtsModule` and `ReservationsModule` in `src/app.module.ts`.
-- [ ] T015 [P] Add an e2e harness in `test/` providing per-test truncation of `Reservation`/`CourtOperatingHour`/`Court`/`Customer` and helpers to seed a bookable court (open 08:00–22:00 Mon–Sat, Sunday deliberately unconfigured) plus two customers, per quickstart.md.
+- [x] T015 [P] Add an e2e harness in `test/` providing per-test truncation of `Reservation`/`CourtOperatingHour`/`Court`/`Customer` and helpers to seed a bookable court (open 08:00–22:00 Mon–Sat, Sunday deliberately unconfigured) plus two customers, per quickstart.md.
 
 **Checkpoint**: Schema, constraints, error mapping, identity and modules exist.
 User story work can begin.
@@ -89,7 +89,7 @@ confirm each is refused distinctly.
 - [ ] T019 [P] [US1] `src/reservations/dto/create-reservation.dto.spec.ts`: **BR-02** — reject 45, 30, 75 and 210 min, plus inverted and zero-length ranges; accept 60/90/120/150/180 min; **accept a 90-minute slot starting at 18:10** — BR-02 constrains duration only, there is no start-alignment rule (spec.md FR-003). Also reject a duration off by milliseconds (e.g. 60 min + 400 ms), which the DTO must catch by comparing exact millisecond differences.
 - [ ] T020 [US1] `src/reservations/reservations.service.spec.ts`: **BR-03** — reject 21:00–23:00 and 06:00–07:30 against 08:00–22:00; reject a weekday with no configured hours as closed; reject a slot crossing a venue-local day boundary; accept a slot ending exactly at closing time. Not `[P]`: shares a file with T021, T028, T033, T034.
 - [ ] T021 [US1] `src/reservations/reservations.service.spec.ts`: **BR-06** — reject a start in the past and a slot that started in the past but ends in the future; accept a future slot. Also assert **FR-007**: an unknown `courtId` is refused as not found. Not `[P]`: shares a file with T020, T028, T033, T034.
-- [ ] T022 [P] [US1] `src/courts/courts.service.spec.ts`: **BR-07** — a court with `underMaintenance = true` is not bookable; a court with `isActive = false` is not bookable for its own distinct reason; a court that is active and not under maintenance is bookable.
+- [x] T022 [P] [US1] `src/courts/courts.service.spec.ts`: **BR-07** — a court with `underMaintenance = true` is not bookable; a court with `isActive = false` is not bookable for its own distinct reason; a court that is active and not under maintenance is bookable.
 
 ### Implementation for User Story 1
 
