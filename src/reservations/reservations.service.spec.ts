@@ -7,6 +7,8 @@ import {
   OutsideOperatingHoursError,
   CourtClosedThatDayError,
   SpansDayBoundaryError,
+  StartInPastError,
+  CourtNotFoundError,
 } from '../common/domain/domain.exception';
 import { CourtOperatingHour } from '../generated/prisma/client';
 
@@ -288,6 +290,140 @@ describe('ReservationsService', () => {
 
       expect(caught).toBeUndefined();
       expect(getOperatingWindowForDayMock).toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * ## T021 — BR-06 (docs/business-rules.md; spec.md FR-005, Edge Cases
+   * "Slot straddling the current moment"; contracts/reservations-api.md
+   * `START_IN_PAST`) and FR-007 (spec.md; contracts/reservations-api.md
+   * `COURT_NOT_FOUND`)
+   *
+   * "Cannot book a slot in the past." Per the contract's fixed evaluation
+   * order, BR-06 sits *after* court-exists (404) and BR-07/bookable (409),
+   * but *before* BR-03/operating-hours (409) and BR-01/overlap (409). So the
+   * `beforeEach` below stubs a found, bookable court, and the "rejects"
+   * cases assert that neither `getOperatingWindowForDay` nor
+   * `findOverlapping` nor `create` on the repository is ever reached.
+   *
+   * **Testability note.** There is no injectable clock anywhere in this
+   * codebase (no `src/common/time/clock.ts` or similar) — only the
+   * timezone-aware but clock-free helpers in `src/common/time/venue-time.ts`.
+   * `ReservationsService` is therefore expected to compare `startTime`
+   * against a real `new Date()`/`Date.now()` read at call time, which this
+   * spec cannot mock. The two "rejects" cases below use fixed 2026-08-01
+   * dates, safely before this environment's real wall clock (2026-08-26 per
+   * `date`); the straddling case instead uses `Date.now()`-relative offsets
+   * so it stays correct however long after 2026-08-26 this suite is
+   * actually run. A future injectable-clock refactor would let all three be
+   * expressed as fixed instants — out of scope for this task.
+   */
+  describe('BR-06 — not in the past', () => {
+    function bookableTuesdayCourt(): CourtWithOperatingHours {
+      return bookableCourtWithHours([operatingHourRow(2, 480, 1320)]); // Tue 08:00-22:00
+    }
+
+    beforeEach(() => {
+      // Every scenario here is past court-exists (FR-007) and BR-07
+      // (bookable) — the fixed evaluation order in
+      // contracts/reservations-api.md places both ahead of BR-06 — so any
+      // rejection observed below is attributable to BR-06 alone.
+      findByIdWithOperatingHoursMock.mockResolvedValue(bookableTuesdayCourt());
+      checkBookabilityMock.mockReturnValue({ bookable: true });
+    });
+
+    it('BR-06: rejects a start time that is clearly in the past', async () => {
+      const args = createArgs(
+        new Date('2026-08-01T10:00:00.000-05:00'), // well before "now"
+        new Date('2026-08-01T11:30:00.000-05:00'), // 90 minutes later — valid duration, still past
+      );
+
+      await expect(service.create(...args)).rejects.toThrow(StartInPastError);
+      expect(getOperatingWindowForDayMock).not.toHaveBeenCalled();
+      expect(findOverlappingMock).not.toHaveBeenCalled();
+      expect(createReservationMock).not.toHaveBeenCalled();
+    });
+
+    it('BR-06: rejects a slot that started in the past even though it ends in the future', async () => {
+      // spec.md Edge Cases: "a slot that started in the past but ends in the
+      // future is a past slot and is rejected" — BR-06 is about the START
+      // instant, not whether the slot is "still happening" right now.
+      const now = Date.now();
+      const args = createArgs(
+        new Date(now - 30 * 60 * 1000), // started 30 minutes ago
+        new Date(now + 30 * 60 * 1000), // ends 30 minutes from now
+      );
+
+      await expect(service.create(...args)).rejects.toThrow(StartInPastError);
+      expect(getOperatingWindowForDayMock).not.toHaveBeenCalled();
+      expect(findOverlappingMock).not.toHaveBeenCalled();
+      expect(createReservationMock).not.toHaveBeenCalled();
+    });
+
+    it('BR-06: accepts a slot that starts and ends in the future', async () => {
+      getOperatingWindowForDayMock.mockReturnValue({
+        opensAt: 480,
+        closesAt: 1320,
+      });
+      findOverlappingMock.mockResolvedValue([]);
+      createReservationMock.mockResolvedValue({
+        id: 'res-2',
+        courtId: COURT_ID,
+        court: { id: COURT_ID, name: 'Cancha 1' },
+        customerId: CUSTOMER_ID,
+        startTime: new Date('2026-09-01T18:00:00.000-05:00'),
+        endTime: new Date('2026-09-01T19:30:00.000-05:00'),
+        status: 'CONFIRMED',
+        price: 140000,
+        isRecurring: false,
+        isTraining: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const args = createArgs(
+        new Date('2026-09-01T18:00:00.000-05:00'), // Tue 18:00, well after "now"
+        new Date('2026-09-01T19:30:00.000-05:00'), // Tue 19:30
+      );
+
+      let caught: unknown;
+      try {
+        await service.create(...args);
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeUndefined();
+      expect(createReservationMock).toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * ## T021 — FR-007 (spec.md; Acceptance Scenario 11;
+   * contracts/reservations-api.md `COURT_NOT_FOUND`, step 2 of the fixed
+   * evaluation order)
+   *
+   * "System MUST reject a reservation request naming a court that does not
+   * exist." Modelled here as `findByIdWithOperatingHours` resolving `null` —
+   * per `src/courts/courts.service.ts`'s own contract, `null` IS the "no
+   * such court" representation, never a distinct sentinel. Court-exists is
+   * evaluated before BR-07/bookable, BR-06/not-past and BR-03/hours, so
+   * nothing downstream of it should ever run.
+   */
+  describe('FR-007 — court must exist', () => {
+    it('FR-007: rejects a reservation naming a courtId that does not exist', async () => {
+      findByIdWithOperatingHoursMock.mockResolvedValue(null);
+
+      const args = createArgs(
+        new Date('2026-09-01T18:00:00.000-05:00'),
+        new Date('2026-09-01T19:30:00.000-05:00'),
+      );
+
+      await expect(service.create(...args)).rejects.toThrow(CourtNotFoundError);
+      expect(checkBookabilityMock).not.toHaveBeenCalled();
+      expect(getOperatingWindowForDayMock).not.toHaveBeenCalled();
+      expect(findOverlappingMock).not.toHaveBeenCalled();
+      expect(createReservationMock).not.toHaveBeenCalled();
     });
   });
 });
