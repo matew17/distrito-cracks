@@ -56,7 +56,7 @@ depends on all of it.
 ### Cross-cutting infrastructure
 
 - [x] T008 [P] Create the domain exception hierarchy in `src/common/domain/domain.exception.ts`: a base carrying `code`, `rule` and HTTP status, plus one subclass per row of the error table in contracts/reservations-api.md.
-- [ ] T009 Create `src/common/filters/domain-exception.filter.ts` mapping domain exceptions to the documented status + `{ statusCode, code, rule, message }` envelope, with a catch-all that logs the real error server-side and returns a generic 500. Register it globally in `src/main.ts`. Never emit Prisma text (§IV).
+- [x] T009 Create `src/common/filters/domain-exception.filter.ts` mapping domain exceptions to the documented status + `{ statusCode, code, rule, message }` envelope, with a catch-all that logs the real error server-side and returns a generic 500. Register it globally in `src/main.ts`. Never emit Prisma text (§IV).
 - [x] T010 [P] Create `src/common/time/venue-time.ts` exposing venue-local weekday (`0`=Sunday) and minutes-from-midnight for an instant, using `Intl.DateTimeFormat` with the configured zone — no new dependency (research.md R4).
 - [x] T011 [P] Add unit spec `src/common/time/venue-time.spec.ts` covering weekday/minute extraction, midnight and `closesAt = 1440` boundaries, and that results are independent of the process `TZ`.
 - [x] T012 [P] Create `src/common/auth/current-customer.guard.ts` and `current-customer.decorator.ts`: resolve the `X-Customer-Id` header to a `Customer`, 401 on missing/unknown, attach to the request. Include the comment from research.md R5 stating this is a spoofable placeholder that must not ship publicly. Never read the customer id from a body or route param — BR-08 depends on it.
